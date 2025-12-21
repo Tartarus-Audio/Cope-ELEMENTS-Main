@@ -325,7 +325,7 @@ When people ask what the names mean:
 ## Repository Structure
 
 ```
-github.com/TartarusAudio/
+github.com/Tartarus-Audio/
 +-- cope-elements/ (This repository, information and documentation)
 +-- cope-adhd/
 +-- cope-magic/
