@@ -369,4 +369,8 @@ All code is written in **Zig 0.15.2**.
 
 ---
 
+## License
+
+LGPL-3.0 - See [LICENSE](LICENSE) for details.
+
 *Eww, ponies!* *COPE harder.*
