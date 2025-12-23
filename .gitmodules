@@ -1,6 +1,3 @@
 [submodule "Cope-ADHD"]
 	path = Cope-ADHD
 	url = https://github.com/Tartarus-Audio/Cope-ADHD.git
-[submodule "Cope-Clop"]
-	path = Cope-Clop
-	url = https://github.com/Tartarus-Audio/Cope-Clop.git
