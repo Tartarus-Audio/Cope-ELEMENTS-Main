@@ -137,11 +137,11 @@ Design philosophy:
 ### SLUMBER
 **Synthesis Layer for Unified MIDI-Based Event Rendering**
 
-MIDI and synthesis engine - the quiet backbone of music creation.
+MIDI processing and soundfont synthesis.
 
 | Aspect | Description |
 |--------|-------------|
-| Purpose | MIDI processing and audio synthesis |
+| Purpose | MIDI playback and instrument synthesis |
 | Features | MIDI file parsing, MIDI I/O, soundfont synthesis (SF2/SF3/SFZ), real-time event processing |
 | Responsibility | MIDI device communication, note events, instrument synthesis, controller mapping |
 | Priority | Tertiary - Standalone or integrated with other libraries |
@@ -149,6 +149,66 @@ MIDI and synthesis engine - the quiet backbone of music creation.
 Platform notes:
 - Works independently - doesn't require other COPE libraries
 - Can output directly to MAGIC, or generate samples for other uses
+
+Note: For tracker formats (MOD/XM/S3M/IT), see OCTAVIA.
+
+---
+
+### OCTAVIA
+**Orchestrated Comprehensive Tracker And Virtual Instrument Architecture**
+
+Tracker module playback engine.
+
+| Aspect | Description |
+|--------|-------------|
+| Purpose | Play tracker music formats |
+| Formats | MOD, XM, S3M, IT |
+| Features | Pattern playback, sample interpolation, effect processing, tempo/speed control |
+| Responsibility | Module parsing, tick-based sequencing, channel mixing, tracker effects |
+| Priority | Tertiary - Standalone or integrated with other libraries |
+
+Note: Separate from SLUMBER (MIDI) - trackers have their own playback model with patterns, samples, and effects built-in.
+
+---
+
+### WUBS
+**Waveform Utilities for Beat Synthesis**
+
+Audio analysis and beat detection.
+
+| Aspect | Description |
+|--------|-------------|
+| Purpose | Analyze audio for visualization and synchronization |
+| Features | FFT/spectrum analysis, beat detection, BPM detection, key detection, loudness metering (LUFS/RMS), waveform generation, onset detection |
+| Responsibility | Real-time and offline audio analysis, tempo tracking, frequency analysis |
+| Priority | Tertiary - Enhances visualization and sync capabilities |
+
+Future goals:
+- Variable tempo tracking
+- Key change detection
+- Segment analysis
+
+---
+
+### CADENCE
+**[Acronym TBD]**
+
+System-wide audio routing and processing.
+
+| Aspect | Description |
+|--------|-------------|
+| Purpose | Route and process audio between applications and devices |
+| Features | Virtual routing, system-wide effects (via APO), ASIO-to-WASAPI bridge, per-app audio control |
+| Responsibility | Audio pipeline interception, effect injection, device bridging |
+| Priority | Standalone application/service - uses COPE libraries internally |
+
+Components:
+- **APO Plugin**: System-wide effect chain injection (Windows 10+)
+- **CLOP-Audio**: DLL proxy for legacy apps (DirectSound, WinMM)
+- **ASIO Bridge**: Expose WASAPI as ASIO (without locking everything like ASIO4ALL)
+- **Virtual Driver**: Optional kernel driver for virtual audio endpoints (requires signing)
+
+Think: Voicemeeter replacement, but open source and not shit.
 
 ---
 
@@ -185,11 +245,14 @@ Usage philosophy:
 ├─────────────────────────────────────────────────┤ │             │
 │  APPLES (Mixer) │ DARLING (Plugins) │ DASH (DSP)│<┤             │
 ├─────────────────────────────────────────────────┤ │             │
-│       BUTTER (Codecs)      │    SLUMBER (MIDI)  │<┤             │
+│ BUTTER (Codecs) │ WUBS (Analysis)               │<┤             │
+├─────────────────────────────────────────────────┤ │             │
+│ SLUMBER (MIDI)  │ OCTAVIA (Trackers)            │<┤             │
 ├─────────────────────────────────────────────────┤ │             │
 │             MAGIC (Core Output)                 │<┤             │
 └─────────────────────────────────────────────────┘ └─────────────┘
-       Each library is fully standalone
+
+CADENCE: Standalone system-level routing (uses COPE internally)
 ```
 
 Note: HARMONY init is required to enter the Portal. After that, each library works independently. ADHD sits alongside as an optional enhancement. CELESTIA wraps everything for simplicity when you want the full experience.
@@ -249,12 +312,18 @@ HARMONY (required - the gateway to Equestria)
     |
     +-- SLUMBER (MIDI/synthesis)
     |
+    +-- OCTAVIA (tracker playback)
+    |
+    +-- WUBS (audio analysis)
+    |
     v
 CELESTIA (optional high-level wrapper)
 
 ADHD: Optional enhancement for any/all libraries
       - When present: shared pools, unified logging, better utilities
       - When absent: each library uses its own internal utilities
+
+CADENCE: Standalone application (uses COPE libraries internally)
 ```
 
 ---
@@ -269,7 +338,9 @@ ADHD: Optional enhancement for any/all libraries
 6. **APPLES** - Mixer, combine multiple sources
 7. **DARLING** - Plugins, extend with third-party processing
 8. **SLUMBER** - MIDI/synthesis, can be developed in parallel
-9. **CELESTIA** - Unified API, built last once all libraries exist
+9. **OCTAVIA** - Tracker playback, can be developed in parallel
+10. **WUBS** - Audio analysis, can be developed in parallel
+11. **CELESTIA** - Unified API, built last once all libraries exist
 
 HARMONY can start minimal (just init/deinit with platform setup) and grow as other libraries need more features.
 
@@ -299,7 +370,11 @@ cope-dash.dll / libcope-dash.so
 cope-apples.dll / libcope-apples.so
 cope-darling.dll / libcope-darling.so
 cope-slumber.dll / libcope-slumber.so
+cope-octavia.dll / libcope-octavia.so
+cope-wubs.dll / libcope-wubs.so
 cope-celestia.dll / libcope-celestia.so
+
+Note: CADENCE is a standalone application, not a library.
 ```
 
 ---
@@ -319,6 +394,9 @@ When people ask what the names mean:
 | DARLING | Treats your plugins like darlings |
 | SLUMBER | Quietly synthesizes in the background while you sleep |
 | CELESTIA | Raises the sun on your audio - everything just works |
+| OCTAVIA | Conducts your tracker music with precision |
+| WUBS | Drops the beat - analysis and detection |
+| CADENCE | Sets the rhythm for your entire system |
 
 ---
 
@@ -335,7 +413,10 @@ github.com/Tartarus-Audio/
 +-- cope-apples/
 +-- cope-darling/
 +-- cope-slumber/
++-- cope-octavia/
++-- cope-wubs/
 +-- cope-celestia/
++-- cadence/ (standalone application)
 +-- cope/ (meta-repo or combined distribution)
 ```
 
@@ -364,7 +445,8 @@ All code is written in **Zig 0.15.2**.
 
 ## Related Projects
 
-- **CLOP** (Chrysalis Low-latency Output Protocol) - WinMM wrapper for Windows to route both MIDI and Audio. Loosely inspired by KDMAPI by Keppy.
+- **CLOP** (Chrysalis Low-latency Output Protocol) - WinMM wrapper for Windows, supports both MIDI and Audio routing
+- **CADENCE** - System-wide audio routing application built on COPE
 - **COPE** (Chrysalis Open Platform Engine) - Main platform umbrella
 
 ---
